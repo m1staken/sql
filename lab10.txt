@@ -1,0 +1,144 @@
+
+-- 1. Напишите триггер, который при обновлении таблицы «Должности» проверял условие: значение оклада не должно измениться более чем на 10%.
+
+--CREATE TRIGGER Trigger1
+--ON Posts
+--FOR UPDATE
+--AS
+--BEGIN
+--	IF EXISTS 
+--	(SELECT 1
+--  FROM inserted i
+--  JOIN deleted d ON i.P_ID = d.P_ID
+--  WHERE ABS(i.P_SAL - d.P_SAL) > d.P_SAL * 0.1)
+
+--	BEGIN
+--      RAISERROR('Значение оклада не должно измениться более чем на 10%', 16, 1);
+--      ROLLBACK TRANSACTION;
+--  END;
+--END;
+
+
+-- 2. Напишите триггер, который при заполнении заказа следил бы за тем, чтобы количество отпускаемых книг не превысило количество тиража.
+
+--CREATE TRIGGER Trigger2
+--ON Items
+--FOR INSERT, UPDATE
+--AS
+--BEGIN
+--	IF EXISTS
+--  (SELECT 1
+--  FROM inserted i
+--  JOIN Books b ON i.B_ID = b.B_CONTRACT
+--  WHERE i.B_COUNT > b.B_CIRCUL)
+--	BEGIN
+--		RAISERROR('Количество заказанных книг превышает количество тиража', 16, 1);
+--      ROLLBACK TRANSACTION;
+--	END;
+--END;
+
+
+-- 3. Напишите триггер, который при снижении стоимости книги ниже 50 рублей, удалял эти книги из заказов.
+
+--CREATE TRIGGER Trigger3
+--ON Books
+--FOR UPDATE
+--AS
+--BEGIN
+--  DELETE FROM Items
+--  WHERE B_ID IN (
+--      SELECT B_CONTRACT
+--      FROM inserted
+--      WHERE B_PRICE < 50
+--    );
+--END;
+
+
+
+-- 4. Напишите триггер, который запрещает удалять запись из таблицы «Заказчики», если с ней связаны записи из других таблиц.
+
+--CREATE TRIGGER Trigger123
+--ON Customers
+--INSTEAD OF DELETE
+--AS
+--BEGIN
+--  IF EXISTS (
+--  SELECT 1 
+--  FROM deleted d
+--  JOIN Orders o ON d.C_ID = o.O_COMPANY
+--)
+--  BEGIN
+--      RAISERROR('Невозможно удалить заказчика, так как с ним связаны заказы.', 16, 1);
+--		ROLLBACK TRANSACTION; 
+--  END
+--	DELETE FROM Customers 
+--  WHERE C_ID IN (SELECT C_ID FROM deleted);
+--END;
+
+
+
+-- 5. Напишите триггер, который при изменении цены книги автора из Казани следил бы за тем, чтобы эта цена не была ниже средней цены всех книг.
+
+--CREATE TRIGGER Trigger124
+--ON Books 
+--FOR UPDATE
+--AS
+--BEGIN
+--  IF EXISTS 
+--	(SELECT 1
+--	FROM inserted i
+--	JOIN Titles t ON t.B_ID = i.B_CONTRACT
+--	JOIN Authors a ON t.A_ID = a.A_ID
+--	WHERE i.B_PRICE < AVG(B_PRICE)
+--	AND a.A_ADDR = 'Казань')
+--	BEGIN
+--      RAISERROR('Нельзя установить цену ниже средней для авторов из Казани', 16, 1)
+--      ROLLBACK TRANSACTION
+--  END
+--END;
+
+
+-- 6. Напишите триггер, который при удалении данных из таблицы «Книги», собирает эти данные в заранее созданной таблице для 
+-- востановления неправильно удаленных данных (для проверки необходимо добавить в таблицу «Книги» новую строку).
+
+--CREATE TABLE DeletedBooks (
+--  B_CONTRACT INT,
+--  B_DATE DATETIME DEFAULT GETDATE(),
+--  B_MAN INT,
+--	B_TITLE NVARCHAR(100),
+--  B_PRICE DECIMAL(10,2),
+--	B_ADVANCE DECIMAL(10,2),
+--	B_FEE DECIMAL(10,2),
+--  B_PUBL DATETIME DEFAULT GETDATE(),
+--	B_CIRCUL INT,
+--  B_EDIT INT, 
+--	B_REST INT);
+
+--CREATE TRIGGER Trigger125
+--ON Books
+--FOR DELETE
+--AS
+--BEGIN
+--	INSERT INTO DeletedBooks(B_CONTRACT, B_DATE, B_MAN, B_TITLE, B_PRICE, B_ADVANCE, B_FEE, B_PUBL, B_CIRCUL, B_EDIT, B_REST)
+--	SELECT d.B_CONTRACT, d.B_DATE, d.B_MAN, d.B_TITLE, d.B_PRICE, d.B_ADVANCE, d.B_FEE, d.B_PUBL, d.B_CIRCUL, d.B_EDIT, d.B_REST
+--  FROM deleted d;
+--END;
+
+
+
+-- ДОПЗАПРОС: при добавлении записи в таблицу сотрудники следить за тем чтобы не было сотрудников с таким же именем и фамилией
+
+CREATE TRIGGER Trigger12
+ON Employees
+FOR INSERT
+AS 
+BEGIN
+	IF EXISTS 
+	(SELECT 1 
+	FROM inserted i
+	WHERE i.E_FNAME = E_FNAME AND i.E_LNAME = E_LNAME)
+	BEGIN
+		RAISERROR('Такой сотрудник уже существует', 16, 1);
+		ROLLBACK TRANSACTION;
+	END
+END

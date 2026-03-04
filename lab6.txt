@@ -1,0 +1,88 @@
+
+-- 1. С помощью запроса добавьте в таблицу «Заказчики» заказчика из Ростова. 
+INSERT INTO Customers (C_ID, C_NAME, C_ADDR)
+VALUES (6, '«Шестой»', 'Ростов' );
+
+
+-- 2. С помощью запроса добавьте один заказ для заказчика из Ростова (сначала данные 
+-- добавляем в таблицу «Заказы», потом в таблицу «Строки заказа»), в состав заказа
+-- входит: книга «Первая» – 50 штук и книга «Третья» – 70 штук. 
+INSERT INTO Orders (O_ID, O_COMPANY, O_DATE, O_READY)
+VALUES (9, 6, '2025-04-12', '2025-04-22');
+
+INSERT INTO Items (O_ID, B_ID, B_COUNT)
+VALUES (9, 1, 50), (9, 3, 70)
+
+
+-- 3. Напишите команду, которая бы увеличила количество книг «Первая» на 10 штук в заказе для заказчика из Ростова.
+UPDATE Items
+SET B_COUNT = B_COUNT + 10
+WHERE 
+	B_ID IN (
+        SELECT B_CONTRACT
+        FROM Books
+        WHERE B_TITLE = '«Первая»'
+    )
+	AND O_ID IN (
+		SELECT O_ID 
+		FROM Orders o 
+		JOIN Customers c ON c.C_ID = o.O_COMPANY
+		WHERE c.C_ADDR = 'Ростов');
+
+
+-- 4. С помощью запросов удалите:
+-- все заказы заказчика из Ростова,
+-- заказчика из Ростова.
+DELETE o FROM Orders o
+JOIN Customers c ON c.C_ID = o.O_COMPANY
+WHERE c.C_ADDR = 'Ростов';
+
+DELETE FROM Customers 
+WHERE C_ADDR = 'Ростов';
+
+
+-- 5. Напишите запрос, который бы перевёл в седьмую комнату менеджеров, сидящих во второй комнате. (2 первичных ключа)
+
+UPDATE Employees
+SET E_ROOM = 7, E_TEL = (SELECT R_TEL FROM Rooms WHERE R_NO = 7)
+WHERE 
+	E_ROOM = 2
+    AND E_POST IN (
+	SELECT P_ID
+	FROM Posts
+	WHERE P_POST = 'Менеджер' );
+
+
+-- 6. Заказчик «Второй» уволился с работы. Переназначьте его заказы заказчику «Пятый».
+UPDATE Orders
+SET O_COMPANY = 5
+WHERE O_COMPANY IN (
+	SELECT C_ID 
+	FROM Customers
+	WHERE C_NAME = '«Второй»'
+	);
+
+
+-- 7. Создать таблицу «Table_1» с полями
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Table_1')
+CREATE TABLE Table_1 (
+    book_name VARCHAR(50) NOT NULL,
+    count INT NOT NULL
+);
+
+--  С помощью запроса занести в эту таблицу названия книг, тираж которых меньше 1000.
+INSERT INTO Table_1 (book_name, count)
+SELECT B_TITLE, B_CIRCUL 
+FROM Books 
+WHERE B_CIRCUL < 1000;
+
+
+-- 8. С помощью запроса заполняем поле B_REST (остаток тиража = тираж – сумма количества книг в заказах) в таблице Books (Книги) для книги «Первая».
+UPDATE Books
+SET B_REST = B_CIRCUL - (
+    SELECT (SUM(i.B_COUNT))
+    FROM Items i
+    WHERE i.B_ID = Books.B_CONTRACT
+)
+WHERE B_TITLE = '«Первая»';
+

@@ -1,0 +1,78 @@
+
+--5 лабораторная работа--
+
+-- 1. Напишите запрос, который показывает фамилии и имена редакторов, а также номера комнат, где они сидят.
+SELECT E_LNAME, E_FNAME, E_ROOM
+FROM Posts p
+JOIN Employees em ON p.P_ID = em.E_POST AND p.P_Post = 'Редактор';
+
+
+--2. Напишите запрос, который выводит название и общую стоимость тиража для каждой книги автора Ильясова Марата.
+SELECT B_TITLE, B_PRICE*B_CIRCUL AS COMMON_CIRCUL 
+FROM Books b
+JOIN Titles t ON t.B_ID = b.B_CONTRACT
+JOIN Authors a ON t.A_ID = a.A_ID
+WHERE a.A_FNAME = 'Ильясов' AND a.A_LNAME = 'Марат';
+
+
+--3. Напишите запрос, который для каждого автора показывает количество его книг.
+SELECT A_FNAME, A_LNAME, COUNT(*) AS B_COUNT
+FROM Books b
+JOIN Titles t ON t.B_ID = b.B_CONTRACT
+JOIN Authors a ON a.A_ID = t.A_ID
+GROUP BY a.A_FNAME, a.A_LNAME
+
+
+--4. Напишите запрос, который выводит фамилию, имя и телефон ответственного редактора для книги «Вторая».
+SELECT E_FNAME, E_LNAME, E_TEL 
+FROM Employees e
+JOIN Books b ON b.B_EDIT = e.E_ID
+WHERE b.B_TITLE = '«Вторая»';
+
+
+--5. Напишите запрос, который выводит количество женщин среди менеджеров, родившихся до 2000 года.
+SELECT COUNT(*) AS M_COUNT
+FROM Employees em
+JOIN Posts p ON P_ID = E_POST
+WHERE em.E_SEX = 'Ж' AND em.E_BORN < '2000-01-01' AND  p.P_POST = 'Менеджер' 
+
+
+--6. Напишите запрос, который для заказчика «Первый» показывает названия заказанных им книг.
+SELECT B_TITLE
+FROM Books b
+JOIN Items i ON i.B_ID = b.B_CONTRACT
+JOIN Orders o ON o.O_ID = i.O_ID
+JOIN Customers c ON c.C_ID = o.O_COMPANY
+WHERE c.C_NAME = '«Первый»';
+
+
+--7. Напишите запрос, который показывает сколько книг заказали 11 октября 2020 года.
+SELECT COUNT(*) AS B_COUNT
+FROM Books b
+JOIN Items i ON i.B_ID = b.B_CONTRACT
+JOIN Orders o ON o.O_ID = i.O_ID
+WHERE o.O_DATE = '2020-10-11';
+
+
+--8. Напишите запрос, который показывает количество заказанных книг по датам.
+SELECT COUNT(*) AS B_COUNT
+FROM Books b
+JOIN Items i ON i.B_ID = b.B_CONTRACT
+JOIN Orders o ON o.O_ID = i.O_ID
+GROUP BY "O_DATE";
+
+
+--9. Напишите запрос, который выводит общий тираж книг авторов из Москвы.
+SELECT SUM("B_CIRCUL")
+FROM Books b
+JOIN Titles t ON t.B_ID = b.B_CONTRACT
+JOIN Authors a ON a.A_ID = t.A_ID
+WHERE a.A_ADDR = 'Москва';
+
+
+--10. Напишите запрос, который бы вывел все пары сотрудников, которые живут в одном и том же городе. 
+--Необходимо исключить комбинации сотрудников с ними же, а также дубликаты строк, выводимых в обратном порядке.
+SELECT DISTINCT CONCAT(e1.E_FNAME, ' ',e1.E_LNAME) AS "Emp1", CONCAT(e2.E_FNAME, ' ', e2.E_LNAME) AS "Emp2", e1.E_ADDR as "City"
+FROM Employees e1, Employees e2
+WHERE e1.E_ADDR = e2.E_ADDR AND CONCAT(e1.E_FNAME, e1.E_LNAME) < CONCAT(e2.E_FNAME, e2.E_LNAME)
+ 

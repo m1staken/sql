@@ -1,0 +1,78 @@
+
+--4 лабораторная работа
+
+
+-- 1. Запрос для таблицы «authors» (фамилия, имя и телефон авторов из Казани)
+SELECT A_FNAME, A_LNAME, A_TEL 
+FROM Authors
+WHERE A_ADDR = 'Казань';
+
+
+-- 2. Запрос для таблицы «books» (название, цена, тираж и общая стоимость тиража)
+SELECT B_TITLE, B_PRICE, B_CIRCUL, B_CIRCUL*B_PRICE as COMMON_CIRCUL
+FROM Books;
+
+
+-- 3. Запрос с фамилией и именем всех сотрудников женского пола в одном столбце
+SELECT E_FNAME + E_LNAME as WOMAN_NAME
+FROM Employees
+WHERE E_SEX = 'Ж';
+
+
+-- 4. Запрос для таблицы «employees» (фамилия, имя и возраст)
+SELECT E_FNAME, E_LNAME, DATEDIFF(YEAR, E_BORN, GETDATE()) AS AGE
+FROM Employees;
+
+
+
+-- 5. Запрос для таблицы «books» (уникальные коды ответственных редакторов)
+SELECT DISTINCT B_EDIT
+FROM Books
+
+
+-- 6. Запрос для сотрудников, родившихся в январе 2000 г.
+
+SELECT *
+FROM Employees
+WHERE YEAR(E_BORN) = 2000 AND MONTH(E_BORN) = 1;
+
+
+-- 7. Запрос для таблицы «employees» (не из Москвы и в комнате №2)
+SELECT E_FNAME, E_LNAME
+FROM Employees
+WHERE E_ADDR != 'Москва' AND E_ROOM = 2;
+
+
+-- 8. Запрос для таблицы «books» (выход с 1 по 11 января 2019 г.)
+SELECT B_TITLE
+FROM Books 
+WHERE B_PUBL BETWEEN '2019-01-01' AND '2019-01-11';
+
+
+-- 9. Запрос для авторов с именами от Б до И
+SELECT *
+FROM Authors
+WHERE A_LNAME BETWEEN 'Б' AND 'Й';
+
+
+-- 10. Запрос для таблицы «books» (название, стоимость, тираж по убыванию)
+SELECT B_TITLE, B_PRICE, B_CIRCUL
+FROM Books
+ORDER BY B_CIRCUL DESC;
+
+
+-- 11. Запрос для книги с максимальной стоимостью
+SELECT TOP 1 B_TITLE, B_PRICE
+FROM Books
+ORDER BY B_PRICE DESC;
+
+
+-- 12. Запрос с количеством сотрудников по комнатам
+SELECT E_ROOM, COUNT(*) AS E_COUNT
+FROM Employees
+GROUP BY E_ROOM;
+
+-- 13. Запрос для книг с тиражом меньше среднего
+SELECT B_TITLE
+FROM Books
+WHERE B_CIRCUL < (SELECT (AVG(B_CIRCUL)) FROM Books); 

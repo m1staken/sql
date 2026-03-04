@@ -1,0 +1,116 @@
+
+-- 1. Хранимая процедура должна для заданной (через параметр) книги заполнить поле «Остаток тиража» числом, 
+-- которое получается уменьшением тиража этой книги на заданное (через параметр) число.
+
+--CREATE PROCEDURE Procedure1
+--	@BookID INT, 
+--	@Number INT
+--AS 
+--UPDATE Books
+--SET B_CIRCUL = B_CIRCUL - @Number
+--    WHERE B_CONTRACT = @BookID;
+
+--EXECUTE Procedure1 @BookID = 1, @Number = 99;
+
+
+
+-- 2. Хранимая процедура должна увеличить для заданного (через параметр) заказчика на заданное (через параметр)
+-- число количество заказанных (название книги задается через параметр) книг.
+
+--CREATE PROCEDURE Procedure2
+--    @Customer_ID INT,           
+--    @BookTitle NVARCHAR(40),
+--    @IncreaseAmount INT 
+--AS 
+--BEGIN
+-- UPDATE it
+--        SET it.B_COUNT = it.B_COUNT + @IncreaseAmount
+--        FROM items it
+--        JOIN Orders O ON it.O_ID = O.O_ID
+--        JOIN Books B ON it.B_ID = B.B_CONTRACT
+--        WHERE 
+--            O.O_COMPANY = @Customer_ID     
+--            AND B.B_TITLE = @BookTitle;
+--END;
+
+
+
+-- 3. Хранимая процедура должна показывать фамилии, имена и отчества редакторов книг заданного (через параметр) автора.
+
+--CREATE PROCEDURE Procedure3
+--	@Author_NAME NVARCHAR(40)
+--AS
+--BEGIN
+--	SELECT E_FNAME, E_LNAME 
+--	FROM Employees em
+--	JOIN Editors ed ON em.E_ID = ed.E_ID
+--	JOIN Books b on ed.B_ID = b.B_CONTRACT
+--	JOIN Titles t on b.B_CONTRACT = t.B_ID
+--	JOIN Authors a ON t.A_ID = a.A_ID
+--	WHERE a.A_FNAME = @Author_NAME;
+--END;
+--EXECUTE Procedure3 @Author_NAME = 'Ильясов';
+
+
+
+-- 4. Для книг, названия которых содержат заданную (через параметр) подстроку, хранимая процедура должна вывести фамилию, имя автора и название книги.
+
+--CREATE PROCEDURE Procedure4
+--	@Substring NVARCHAR(40)
+--AS
+--BEGIN
+--	SELECT A_FNAME, A_LNAME, B_TITLE
+--	FROM Authors a
+--	JOIN Titles t ON a.A_ID = t.A_ID
+--	JOIN Books b ON t.B_ID = b.B_CONTRACT
+--	WHERE b.B_TITLE LIKE '%' + @Substring + '%'
+--END;
+--EXECUTE Procedure4 @Substring = 'ят';
+
+
+
+-- 5. Хранимая процедура должна показать названия заказанной книги и общее количество заказа этой книги для заданного (через параметр) города заказчика.
+
+--CREATE PROCEDURE Procedure5
+--	@City NVARCHAR(40)
+--AS
+--BEGIN
+--	SELECT B_TITLE, COUNT(*) AS B_COUNT
+--	FROM Books b
+--	JOIN Items i ON b.B_CONTRACT = i.B_ID
+--	JOIN Orders o ON i.O_ID = o.O_ID 
+--	JOIN Customers c ON o.O_COMPANY = c.C_ID
+--	WHERE @City = c.C_ADDR
+--	GROUP BY b.B_TITLE
+--END;
+--EXECUTE Procedure5 @City = 'Казань';
+
+
+
+-- 6. Хранимая процедура должна показать общее количество заказанных книг для заданного (через параметр) автора.
+
+--CREATE PROCEDURE Procedure6
+--	@Author_FNAME NVARCHAR(40)
+--AS
+--BEGIN
+--	SELECT SUM(i.B_COUNT) AS B_COUNT
+--	FROM Items i
+--	JOIN Titles t ON t.B_ID = i.B_ID
+--	JOIN Authors a ON t.A_ID = a.A_ID
+--	WHERE a.A_FNAME = @Author_FNAME
+--END;
+--EXECUTE Procedure6 @Author_FNAME = 'Андреев';
+
+
+
+-- ДОПЗАПРОС: Вывести всех сотрудников которые работают в должности, заданной через параметр
+
+CREATE PROCEDURE Procedure7
+	@E_Post NVARCHAR(40)
+AS
+BEGIN
+	SELECT E_FNAME
+	FROM Employees em
+	JOIN Posts p ON p.P_ID = em.E_POST
+	WHERE @E_Post = p.P_POST;
+END;

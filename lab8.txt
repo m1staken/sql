@@ -1,0 +1,76 @@
+
+
+-- 1. Создайте представление для просмотра всех сотрудников с указанием их должностей, сидящих в комнате 3.
+
+--CREATE VIEW Emp3 AS
+--SELECT e.E_FNAME, e.E_LNAME, p.P_POST
+--FROM Employees e
+--JOIN Posts p ON p.P_ID = e.E_POST
+--WHERE e.E_ROOm = 3;
+
+
+-- 2. Создайте представление для просмотра количества авторов в каждом городе.
+
+--CREATE VIEW Second AS
+--SELECT A_ADDR, COUNT (*) AS author_count
+--FROM Authors 
+--GROUP BY A_ADDR;
+
+
+-- 3. Создайте представление, которое бы показывало название и количество книг, а также их авторов, заказанных в указанную дату.
+
+--CREATE VIEW Third AS
+--SELECT 
+--    b.B_TITLE AS B_TITLE,
+--    COUNT(*) AS B_COUNT,
+--    a.A_FNAME AS A_FNAME,
+--    a.A_LNAME AS A_LNAME
+--FROM Books b
+--JOIN Titles t ON t.B_ID = b.B_CONTRACT  
+--JOIN Authors a ON a.A_ID = t.A_ID
+--JOIN Items i ON i.B_ID = b.B_CONTRACT   
+--JOIN Orders o ON o.O_ID = i.O_ID
+--WHERE o.O_DATE = '2020-10-11'
+--GROUP BY 
+--    b.B_TITLE, a.A_FNAME, a.A_LNAME;
+
+-- 4. Создайте представление, которое бы показывало общее количество книг в каждом заказе.
+
+--CREATE VIEW Fourth AS
+--SELECT COUNT (i.B_ID) AS B_COUNT
+--FROM Items i
+--JOIN Orders o ON o.O_ID = i.O_ID
+--GROUP BY o.O_ID
+
+
+-- 5. Создайте представление для просмотра названий всех книг отредактированных указанным редактором Андреев Александр
+
+CREATE VIEW Fifth AS
+SELECT B_TITLE
+FROM Books b
+JOIN Editors e ON e.B_ID = b.B_CONTRACT
+JOIN Employees em ON em.E_ID = e.E_ID 
+WHERE em.E_FNAME = 'Андреев' AND em.E_LNAME = 'Александр';
+
+
+-- 6. Создайте представление, которое бы показывало названия книг, их авторов и редакторов.
+
+--CREATE VIEW Sixth AS
+--SELECT b.B_TITLE, a.A_FNAME, a.A_LNAME, b.B_EDIT
+--FROM Books b
+--JOIN Titles t ON t.B_ID = b.B_CONTRACT
+--JOIN Authors a ON a.A_ID = t.A_ID
+
+
+-- 7. Создайте представление для просмотра количества авторов и сотрудников по городам (город, количество и укзать авторы это или сотрудники).
+
+--CREATE VIEW Seventh AS
+--SELECT 
+--    COALESCE(a.A_ADDR, e.E_ADDR) AS ADDRESS,
+--    a.A_COUNT AS A_COUNT,
+--    e.E_COUNT AS E_COUNT
+--FROM 
+--    (SELECT A_ADDR, COUNT(*) AS A_COUNT FROM Authors GROUP BY A_ADDR) a
+--FULL JOIN 
+--    (SELECT E_ADDR, COUNT(*) AS E_COUNT FROM Employees GROUP BY E_ADDR) e
+--ON a.A_ADDR = e.E_ADDR;

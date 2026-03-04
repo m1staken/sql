@@ -1,0 +1,76 @@
+
+-- 1. Напишите запрос, использующий подзапрос, который показывает фамилию, и имя автора книги с максимальным тиражом среди авторов из Казани.
+SELECT A_FNAME, A_LNAME
+FROM Authors a
+JOIN Titles t ON t.A_ID = a.A_ID
+WHERE t.B_ID = (
+    SELECT TOP 1 B_CONTRACT 
+    FROM Books 
+    WHERE a.A_ADDR = 'Казань'
+    ORDER BY B_CIRCUL DESC
+);
+
+-- 2. Напишите команду SELECT, использующую подзапрос, которая выбирает всех сотрудников, которые сидят в комнате с программистом.
+SELECT E_FNAME, E_LNAME 
+FROM Employees e
+JOIN Posts p ON p.P_ID = e.E_POST
+WHERE e.E_ROOM = (
+	SELECT E_ROOM 
+	FROM Employees e
+	JOIN Posts p ON p.P_ID = e.E_POST
+	WHERE p.P_POST = 'Программист' 
+) AND p.P_POST != 'Программист' ;
+
+-- 3. Напишите запрос, использующий подзапрос, который показывает имена авторов, издавших более одной книги.
+SELECT A_FNAME, A_LNAME 
+FROM Authors a
+WHERE a.A_ID IN (
+    SELECT A_ID
+    FROM Titles
+    GROUP BY A_ID
+    HAVING COUNT(*) > 1
+);
+
+-- 4. Напишите запрос, использующий подзапрос, который показывает заказчиков, в заказах которых есть книга с минимальной ценой.
+SELECT C_NAME 
+FROM Customers c
+JOIN Orders o ON o.O_COMPANY = c.C_ID
+JOIN Items i ON i.O_ID = o.O_ID
+WHERE i.B_ID = (
+	SELECT TOP 1 B_CONTRACT
+	FROM Books
+	ORDER BY B_PRICE ASC 
+);
+
+-- 5. Напишите запрос, использующий подзапрос, который показывает фамилию, имя и город редактора книги с минимальным тиражом.
+SELECT E_FNAME, E_LNAME, E_ADDR
+FROM Employees
+WHERE E_ID = (
+	SELECT TOP 1 B_EDIT
+	FROM Books
+	ORDER BY B_CIRCUL ASC
+);
+
+
+-- 6. Напишите запрос, использующий подзапрос, который показывает фамилии и имена авторов, у которых тираж книг больше, чем у автора с фамилией Логинов.
+SELECT A_FNAME, A_LNAME
+FROM Authors a
+JOIN Titles t ON t.A_ID = a.A_ID
+JOIN Books b ON b.B_CONTRACT = t.B_ID
+WHERE b.B_CIRCUL > (
+	SELECT b1.B_CIRCUL
+	FROM Books b1
+	JOIN Titles t1 ON t1.B_ID = b1.B_CONTRACT
+	JOIN Authors a1 ON a1.A_ID = t1.A_ID
+	WHERE a1.A_FNAME = 'Логинов'
+);
+
+-- 7. Если хотя бы один автор проживает в Казани, то необходимо посчитать их количество в этом городе (использовать exists).
+SELECT COUNT(*) AS KAZAN_C
+FROM Authors
+WHERE EXISTS (
+    SELECT 1
+    FROM Authors AS a
+    WHERE a.A_ADDR = 'Казань'
+) AND A_ADDR = 'Казань';
+

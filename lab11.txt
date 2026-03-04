@@ -1,0 +1,112 @@
+
+-- 1. Написать запрос, который выводит время года рождения для каждого сотрудника (зима, весна, осень, лето).
+
+SELECT 
+    E_FNAME, 
+    E_LNAME, 
+    E_,
+    CASE 
+        WHEN MONTH(E_BORN) IN (12, 1, 2) THEN 'Зима'
+        WHEN MONTH(E_BORN) IN (3, 4, 5) THEN 'Весна'
+        WHEN MONTH(E_BORN) IN (6, 7, 8) THEN 'Лето'
+        WHEN MONTH(E_BORN) IN (9, 10, 11) THEN 'Осень'
+    END AS season_of_birth
+FROM Employees;
+
+
+
+-- 2. Напишите запрос, который для сотрудников выводит по имеющимся городам сначала количество женщин, потом количество мужчин, проживающих в этих городах.
+
+SELECT 
+    E_ADDR AS City,
+    COUNT(CASE WHEN E_SEX = 'Ж' THEN 1 END) AS E_WOMEN,
+    COUNT(CASE WHEN E_SEX = 'М' THEN 1 END) AS E_MEN
+FROM Employees
+GROUP BY E_ADDR
+ORDER BY E_WOMEN DESC, E_MEN DESC;
+
+
+
+-- 3. Добавить столбец «A_SEX» в таблицу «Авторы» и заполнить следующими значениями: «Ж» – если фамилия автора заканчивается на букву «а», «М» – иначе.
+
+ALTER TABLE Authors
+ADD A_SEX CHAR(1) NULL;
+
+UPDATE Authors
+SET A_SEX = 
+    CASE 
+        WHEN RIGHT(RTRIM(A_FNAME), 1) IN ('а', 'А') THEN 'Ж'
+        ELSE 'М'
+    END;
+
+
+
+-- 4. Создайте представление для просмотра следующей информации: фамилия (полностью) и имя сотрудника (в виде инициалов) в одном столбце, возраст и должность.
+
+CREATE VIEW EmployeeSummary AS
+SELECT
+    CONCAT(e.E_LNAME, ' ', LEFT(e.E_FNAME, 1), '.') AS FullName,
+    DATEDIFF(YEAR, e.E_BORN, GETDATE()) - 
+        CASE 
+            WHEN DATEADD(YEAR, DATEDIFF(YEAR, e.E_BORN, GETDATE()), e.E_BORN) > GETDATE() 
+            THEN 1 
+            ELSE 0 
+        END AS Age,
+    p.P_NAME AS Position
+FROM Employees e
+JOIN Posts p ON p.P_ID = e.E_POST;
+
+
+
+-- 5. Хранимая процедура увеличивает стоимость заданной (через параметр) книги на заданное (через параметр) число при условии, 
+-- что ее тираж меньше среднего тиража по городу автора книги или уменьшает ее стоимость на то же число в противном случае.
+
+CREATE PROCEDURE Procedure1
+    @Book NVARCHAR(40), 
+    @Amount INT
+AS
+BEGIN
+    DECLARE @AvgCirculation INT;
+    DECLARE @AuthorCity NVARCHAR(40);
+    
+    -- Получаем город автора указанной книги
+    SELECT @AuthorCity = a.A_CITY
+    FROM Authors a
+    JOIN Titles t ON t.A_ID = a.A_ID
+    JOIN Books b ON b.B_CONTRACT = t.B_ID
+    WHERE b.B_CONTRACT = @Book;
+    
+    -- Вычисляем средний тираж по книгам того же города автора
+    SELECT @AvgCirculation = AVG(b.B_CIRCUL)
+    FROM Books b
+    JOIN Titles t ON t.B_ID = b.B_CONTRACT
+    JOIN Authors a ON a.A_ID = t.A_ID
+    WHERE a.A_CITY = @AuthorCity;
+    
+    -- Обновляем цену книги
+    UPDATE Books
+    SET B_PRICE = CASE 
+                      WHEN B_CIRCUL < @AvgCirculation THEN B_PRICE + @Amount
+                      ELSE B_PRICE - @Amount
+                  END
+    WHERE B_CONTRACT = @Book;
+END
+
+
+
+-- 6. Напишите триггер, который запрещает добавление записи в таблицу «Авторы», если уже имеется автор с таким же именем и такой же фамилией.
+
+CREATE TRIGGER Trigger12
+ON Authors
+FOR INSERT
+AS 
+BEGIN
+	IF EXISTS 
+	(SELECT 1 
+	FROM inserted i
+	WHERE i.A_FNAME = A_FNAME AND i.A_LNAME = A_LNAME)
+	BEGIN
+		RAISERROR('Такой автор уже существует', 16, 1);
+		ROLLBACK TRANSACTION;
+	END
+END
